@@ -1,0 +1,45 @@
+import pdfplumber
+import json
+import xml.etree.ElementTree as ET
+
+def extract_text_pdfplumber(pdf_path):
+    with pdfplumber.open(pdf_path) as pdf:
+        text_pages = [page.extract_text() for page in pdf.pages]
+    return text_pages
+
+def convert_to_json(text_pages):
+    data = {"pages": [{"page_number": i + 1, "text": text} for i, text in enumerate(text_pages)]}
+    return json.dumps(data, ensure_ascii=False, indent=4)
+
+def convert_to_xml(text_pages):
+    root = ET.Element("Document")
+    for i, text in enumerate(text_pages):
+        page = ET.SubElement(root, "Page", number=str(i + 1))
+        ET.SubElement(page, "Text").text = text
+    
+    tree = ET.ElementTree(root)
+    return ET.tostring(root, encoding='unicode', method='xml')
+
+# Specify the path to your PDF file
+pdf_path = 'your_pdf_file.pdf'
+
+# Extract text from the PDF
+text_pages = extract_text_pdfplumber(pdf_path)
+
+# Convert to JSON
+json_data = convert_to_json(text_pages)
+print("JSON output:")
+print(json_data)
+
+# Save JSON to a file
+with open('output.json', 'w', encoding='utf-8') as json_file:
+    json_file.write(json_data)
+
+# Convert to XML
+xml_data = convert_to_xml(text_pages)
+print("\nXML output:")
+print(xml_data)
+
+# Save XML to a file
+with open('output.xml', 'w', encoding='utf-8') as xml_file:
+    xml_file.write(xml_data)
